@@ -17,7 +17,7 @@ def download_from_overleaf(outfolder):
     Download the .tex files from /Musik/ folder in the Overleaf project to the local /tex/ folder.
     '''
     
-    url = input('Enter the Overleaf URL: ')
+    url = input('If you want to clone /tex/ from a /Musik/ folder, enter the Overleaf url: ')
     
     #Fetch the ID from the url.
     ID = url.split('/')[-1]
@@ -153,31 +153,31 @@ def main():
 
     #Set up the arguments and parse it.
     parser = argparse.ArgumentParser()
-    parser.add_argument('--folder', type=str, help='Path to the subfolder inside RAVA.')
+    parser.add_argument('--project', type=str, help='Project name, e.g. "Revy2022".')
 
     args = parser.parse_args()
 
-    assert args.folder is not None, '--folder argument not given.'
+    assert args.project is not None, '--folder argument not given.'
     
     #Set the folder structure.
-    if not os.path.isdir(args.folder):
-        response = input('The folder does not exist. Do you want me to set it up? [y/n] ').lower().strip()
+    if not os.path.isdir(args.project):
+        response = input('The project does not exist. Do you want me to set it up? [y/n] ').lower().strip()
         if response == 'y': 
             #Make head folder
-            os.mkdir(args.folder)
+            os.mkdir(args.project)
             #Make the subfolders. This should be changed if AV some day decide to change the file structure.
             for folder in ['lyrics', 'other', 'qlab', 'video', 'image', 'sound', 'pptx', 'tex']:
-                os.mkdir(os.path.join(args.folder, folder))
+                os.mkdir(os.path.join(args.project, folder))
         else:
             return
-        print('Folder made.\n')
+        print('Project initialized.\n')
 
         #Download the songs from Overleaf.
-        download_from_overleaf(outfolder = os.path.join(args.folder, 'tex'))
+        download_from_overleaf(outfolder = os.path.join(args.project, 'tex'))
         print('/tex/ folder updated.')
 
     #Find the songs in tex folder.
-    tex  = [os.path.join(args.folder, 'tex', x) for x in os.listdir(os.path.join(args.folder, 'tex')) if x.endswith('.tex')]
+    tex  = [os.path.join(args.project, 'tex', x) for x in os.listdir(os.path.join(args.project, 'tex')) if x.endswith('.tex')]
 
     for tex_file in tex:
        
@@ -188,15 +188,14 @@ def main():
        #If the outfile was modified after the infile, then there's nothing new.
        if os.path.exists(pptx_file):
            if os.path.getmtime(tex_file) < os.path.getmtime(pptx_file):
+               #Perhaps print that we skip the file here.
                continue
            
        #Else convert the tex to pptx.     
        tex_to_pptx(infile=tex_file, outfile=pptx_file)
 
        #And the pptx to png.
-       pptx_to_png(infile=pptx_file, outfolder = os.path.join(args.folder, 'lyrics'))
-
-       print(f'{tex_file} done!')
+       pptx_to_png(infile=pptx_file, outfolder = os.path.join(args.project, 'lyrics'))
 
     return
 
