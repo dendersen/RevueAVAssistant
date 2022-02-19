@@ -3,12 +3,39 @@ import os
 import numpy as np
 import argparse
 import shutil
+import subprocess
+import time
 
 #Dependencies for doing PowerPoint magic.
 from pptx import Presentation
 from pptx.util import Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+
+def download_from_overleaf(outfolder):
+    '''
+    Download the .tex files from /Musik/ folder in the Overleaf project to the local /tex/ folder.
+    '''
+    
+    url = input('Enter the Overleaf URL: ')
+    
+    #Fetch the ID from the url.
+    ID = url.split('/')[-1]
+    
+    os.system(f'git clone https://git.overleaf.com/{ID}/')
+    
+    assert os.path.isdir(f'./{ID}/Musik/'), 'The /Musik/ folder should be found in the overleaf project.'
+    for filename in os.listdir(f'./{ID}/Musik/'):
+        outfile = f'./{outfolder}/{filename}'
+        
+        #Move from the downloaded folder to the .tex folder.
+        os.rename(f'./{ID}/Musik/{filename}', outfile)
+    
+    #Remove the folder afterwards.
+    shutil.rmtree(f'./{ID}/')
+    print('')
+
+    return ID
 
 class PPTXSong:
     def __init__(self, background_color = RGBColor(0,0,0), font_color = RGBColor(255,255,255), font_name  = 'Roboto', font_bold  = True, font_size  = Pt(45)):
@@ -70,6 +97,7 @@ def tex_to_pptx(infile, outfile):
     '''
     Convert a .tex file to a .pptx file. 
     '''
+
     song = PPTXSong()
 
     #Remove leading and trailing spaces and double spaces too.
@@ -95,30 +123,31 @@ def tex_to_pptx(infile, outfile):
     song.save(outfile)
     return
 
-def download_from_overleaf(outfolder):
-    '''
-    Download the .tex files from /Musik/ folder in the Overleaf project to the local /tex/ folder.
-    '''
-    
-    url = input('Enter the Overleaf URL: ')
-    
-    #Fetch the ID from the url.
-    ID = url.split('/')[-1]
-    
-    os.system(f'git clone https://git.overleaf.com/{ID}/')
-    
-    assert os.path.isdir(f'./{ID}/Musik/'), 'The /Musik/ folder should be found in the overleaf project.'
-    for filename in os.listdir(f'./{ID}/Musik/'):
-        outfile = f'./{outfolder}/{filename}'
+def pptx_to_png(infile, outfolder):
+    assert infile.endswith('.pptx'), 'Infile should be a .pptx'
+    #Get the name of the song.
+    name = os.path.basename(infile).replace('.pptx','')
         
-        #Move from the downloaded folder to the .tex folder.
-        os.rename(f'./{ID}/Musik/{filename}', outfile)
+    subfolder = os.path.join(outfolder, name)
     
-    #Remove the folder afterwards.
-    shutil.rmtree(f'./{ID}/')
-    print('')
+    if os.path.isdir(subfolder):
+        #If the subfolder exists, nuke it.
+        shutil.rmtree(subfolder)
+        os.mkdir(subfolder)
+    else:
+        os.mkdir(subfolder)
 
-    return ID
+    #Convert the pptx to a pdf.
+    os.system(f'unoconv {infile} -f pdf')
+    
+    #Grab the name of the infile (but as pdf).
+    infile_pdf = infile.replace('.pptx', '.pdf')
+    
+    #Convert the pdf to .pngs.
+    os.system(f'convert -density 300 {infile_pdf} ./{subfolder}/{name}%02d.png')
+
+    #Delete the pdf in the /pptx/ folder afterwards.
+    os.remove(infile_pdf)
 
 def main():
 
@@ -137,7 +166,7 @@ def main():
             #Make head folder
             os.mkdir(args.folder)
             #Make the subfolders. This should be changed if AV some day decide to change the file structure.
-            for folder in ['lyrics', 'other', 'qlab', 'video', 'sound', 'pptx', 'tex']:
+            for folder in ['lyrics', 'other', 'qlab', 'video', 'image', 'sound', 'pptx', 'tex']:
                 os.mkdir(os.path.join(args.folder, folder))
         else:
             return
@@ -150,17 +179,26 @@ def main():
     #Find the songs in tex folder.
     tex  = [os.path.join(args.folder, 'tex', x) for x in os.listdir(os.path.join(args.folder, 'tex')) if x.endswith('.tex')]
 
-    for infile in tex:
+    for tex_file in tex:
+       
        #Infile is .tex, outfile is .pptx
-       outfile = infile.replace('/tex/', '/pptx/').replace('.tex','.pptx')
+       pptx_file = tex_file.replace('/tex/', '/pptx/').replace('.tex','.pptx')
        
        #Convert the .tex to .pptx
-       tex_to_pptx(infile, outfile)
-    
-    print('/pptx/ folder updated.')
+       #If the outfile was modified after the infile, then there's nothing new.
+       if os.path.exists(pptx_file):
+           if os.path.getmtime(tex_file) < os.path.getmtime(pptx_file):
+               continue
+           
+       #Else convert the tex to pptx.     
+       tex_to_pptx(infile=tex_file, outfile=pptx_file)
+
+       #And the pptx to png.
+       pptx_to_png(infile=pptx_file, outfolder = os.path.join(args.folder, 'lyrics'))
+
+       print(f'{tex_file} done!')
 
     return
-
 
 if __name__ == '__main__':
     main()
