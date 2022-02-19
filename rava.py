@@ -72,7 +72,8 @@ def tex_to_pptx(infile, outfile):
     '''
     song = PPTXSong()
 
-    lyrics = np.array([x.strip() for x in open(infile, 'r').read().splitlines()])
+    #Remove leading and trailing spaces and double spaces too.
+    lyrics = np.array([x.strip().replace('  ',' ') for x in open(infile, 'r').read().splitlines()])
 
     #Make sure that we have the same number of \begin{obeylines} and \end{obeylines}.
     assert sum([r'\begin{obeylines}' == x for x in lyrics]) == sum([r'\end{obeylines}' == x for x in lyrics]), r'Different number of \begin{obeylines} and \end{obeylines}.'
@@ -84,7 +85,7 @@ def tex_to_pptx(infile, outfile):
         lines = lyrics[idx1+1:idx2]
 
         #\n in the document is loaded as \\n. 
-        lines = [x.replace('\\n', '\n') for x in lines if not (x.startswith('\\') or x == '')]
+        lines = [x.replace('\\n', '\n') for x in lines if not (x.startswith('\\') or x == '' or x.startswith('%'))]
 
         for line in lines:
             if line == '<blank>': 
