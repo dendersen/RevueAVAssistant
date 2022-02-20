@@ -75,15 +75,27 @@ class PPTXSong:
         #Add the text and change the font.
         text_frame = title.text_frame
         p = text_frame.paragraphs[0]
-        run = p.add_run()
-        run.text = string
-        
-        #Add the formatting
-        font = run.font
-        font.name = self.font_name
-        font.bold = self.font_bold
-        font.size = self.font_size
-        font.color.rgb = self.font_color
+
+        n_line = 1
+        for s in string.split('\n'):
+            #Remove leading and trailing spaces.
+            s = s.strip()
+
+            if n_line > 1:
+                p.add_line_break()
+
+            run = p.add_run()
+            run.text = s
+
+            #Add the formatting
+            font = run.font
+            font.name = self.font_name
+            font.bold = self.font_bold
+            font.size = self.font_size
+            font.color.rgb = self.font_color
+
+            #Signal we're jumping on to the next line.
+            n_line += 1
 
         return
     
