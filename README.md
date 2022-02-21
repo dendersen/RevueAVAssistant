@@ -1,6 +1,6 @@
 # RAVA - the Revue AV Assistant
 
-RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of repetitive AV tasks for the pf revue. It helps the user with folder structure, creating and updating song slides. This README file also contains a guide for using QLab along with RAVA.
+RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of repetitive AV tasks for the pf revue. It helps the user with folder structure, creating and updating song slides. Make sure to also check out the [*Using QLab with RAVA*](https://github.com/vstenby/RevueAVAssistant/wiki/Using-QLab-with-RAVA) guide in the Wiki. 
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/35364024/154814545-f17f99f9-2893-4633-b5ff-43eb7d128a6b.png" width="450">
@@ -43,10 +43,10 @@ You will also be prompted to enter a Overleaf URL from which RAVA will fetch the
 .
 ⋮
 ├── Musik
-│   ├── song0.tex
-│   ├── song1.tex
+│   ├── songa.tex
+│   ├── songb.tex
 ⋮
-│   └── songN.tex
+│   └── songz.tex
 ⋮
 └── main.tex
 ```
@@ -64,10 +64,10 @@ You don't *have* to give RAVA the Overleaf URL, but if you don't, you will have 
 │   ├── qlab
 │   ├── sound
 │   ├── tex
-│   │   ├── song0.tex
-│   │   ├── song1.tex
+│   │   ├── songa.tex
+│   │   ├── songb.tex
 ⋮
-│   │   └── songN.tex
+│   │   └── songz.tex
 │   └── video
 ├── README.md
 └── rava.py
@@ -81,32 +81,32 @@ In short, the idea behind the folder structure is:
 
   ```
   .
-  ├── song1.pptx
-  ├── song2.pptx
+  ├── songa.pptx
+  ├── songb.pptx
   ⋮
-  └── songN.pptx
+  └── songz.pptx
   ```
-  **Important: If you have made changes to e.g. `song1.tex`, then RAVA will overwrite `song1.pptx`. Therefore - be careful of making changes in the pptx files and then tex files afterwards. Correct what you want in the tex files and run RAVA again.**
+  **Important: If you have made changes to e.g. `songa.tex`, then RAVA will overwrite `songa.pptx`. Therefore - be careful of making changes in the pptx files and then tex files afterwards. Correct what you want in the tex files and run RAVA again.**
   
   
 * `lyrics`: Here you will find the .png images with text for each song. Once populated, it will have the following structure:
 
   ```
   .
-  ├── song1
-  │   ├── song1_00.png
-  │   ├── song1_01.png
-  │   ├── song1_03.png
-  │   └── song1_xx.png
-  ├── song2
-  │   ├── song1_00.png
+  ├── songa
+  │   ├── songa00.png
+  │   ├── songa01.png
+  │   ├── songa03.png
+  │   └── songaxx.png
+  ├── songb
+  │   ├── songb_00.png
       ⋮
-  │   └── song1_xx.png
+  │   └── songb_xx.png
   ⋮
-  └── songN
-      ├── songN_00.png
+  └── songz
+      ├── songz_00.png
       ⋮
-      └── songN_xx.png
+      └── songz_xx.png
   ```
   **Important: These folders are wiped every time the corresponding pptx is updated. Do not save important stuff in these folders!** 
   
