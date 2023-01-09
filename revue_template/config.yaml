@@ -1,0 +1,11 @@
+project:
+  name: revue_template
+  
+  #Settings for lyrics:
+  font_name: 'Roboto'
+  font_bold: True
+  font_size: 45
+
+  #rgb between (0,0,0) and (255, 255, 255)
+  background_color: [0, 0, 0] 
+  font_color: [255, 255, 255] 
