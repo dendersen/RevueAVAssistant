@@ -24,9 +24,13 @@ def main():
     ]
 
     for tex_file in tex:
-
         # Infile is .tex, outfile is .pptx
         pptx_file = tex_file.replace("/tex/", "/pptx/").replace(".tex", ".pptx")
+
+        # If the pptx was modified after the tex, then there's nothing new in the tex file.
+        if os.path.exists(pptx_file):
+            if os.path.getmtime(tex_file) < os.path.getmtime(pptx_file):
+                continue
 
         # Else convert the tex to pptx.
         tex_to_pptx(
