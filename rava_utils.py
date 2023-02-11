@@ -8,7 +8,6 @@ from pptx.util import Pt
 from pptx.dml.color import RGBColor
 import shutil
 
-
 def load_config(path):
 
     with open(path) as f:
@@ -135,17 +134,16 @@ def tex_to_pptx(infile, outfile, config_path):
 
 def pptx_to_png(infile, outfolder):
     assert infile.endswith(".pptx"), "Infile should be a .pptx"
-    # Get the name of the song.
+
+    #Get the name of the song from the .pptx file.
     name = os.path.basename(infile).replace(".pptx", "")
 
-    subfolder = os.path.join(outfolder, name)
-
-    if os.path.isdir(subfolder):
+    if os.path.isdir(outfolder):
         # If the subfolder exists, nuke it.
-        shutil.rmtree(subfolder)
-        os.mkdir(subfolder)
+        shutil.rmtree(outfolder)
+        os.mkdir(outfolder)
     else:
-        os.mkdir(subfolder)
+        os.mkdir(outfolder)
 
     # Convert the pptx to a pdf.
     os.system(f"unoconv {infile} -f pdf")
@@ -154,7 +152,166 @@ def pptx_to_png(infile, outfolder):
     infile_pdf = infile.replace(".pptx", ".pdf")
 
     # Convert the pdf to .pngs.
-    os.system(f"convert -density 300 {infile_pdf} ./{subfolder}/{name}_%03d.png")
+    os.system(f"convert -density 300 {infile_pdf} {outfolder}/{name}_%03d.png")
 
     # Delete the pdf in the /pptx/ folder afterwards.
     os.remove(infile_pdf)
+
+
+def read_files(folder_path):
+    return [open(infile, "r").read() for infile in folder_path]
+
+
+def find_tex_lyrics(project_path):
+    # Find the songs in tex folder.
+    tex_folder = os.path.join(project_path, "lyrics", "00_txt")
+    tex = [
+        os.path.join(tex_folder, x)
+        for x in os.listdir(tex_folder)
+        if x.endswith(".tex")
+    ]
+
+    return tex
+
+def find_txt_lyrics(project_path):
+    # Find the songs in the txt folder.
+    txt_folder = os.path.join(project_path, "lyrics", "00_txt")
+    txt = [
+        os.path.join(txt_folder, x)
+        for x in os.listdir(txt_folder)
+        if x.endswith(".txt")
+    ]
+
+    return txt
+
+def preprocess_txt_songs(song_contents, song_paths=None):
+    def preprocess(txt_string):
+        x = txt_string.splitlines()
+        x = [y.strip() for y in x]  # Remove leading and trailing spaces.
+        x = [y.replace("  ", " ") for y in x]  # Remove double spaces.
+
+        return x
+
+    song_contents_clean = [preprocess(x) for x in song_contents]
+    return song_contents_clean
+
+def preprocess_tex_songs(song_contents, song_paths):
+    def preprocess(tex_string, song_path):
+
+        x = tex_string.splitlines()
+        x = [y.strip() for y in x]  # Remove leading and trailing spaces.
+        x = [y.replace("  ", " ") for y in x]  # Remove double spaces.
+
+        # Split the lines.
+        x = np.array(tex_string.splitlines())
+
+        # Make sure that we have the same number of \begin{obeylines} and \end{obeylines}.
+        assert sum([r"\begin{obeylines}" == y for y in x]) == sum(
+            [r"\end{obeylines}" == y for y in x]
+        ), (
+            r"The number of \begin{obeylines} is not the same as the number of \end{obeylines} in the file "
+            + f"{os.path.basename(song_path)}"
+        )
+
+        lines = []
+
+        # In case we have multiple \begin{obeylines} ... \end{obeylines}, then we loop over them. This cuts out the comments in between.
+        for idx1, idx2 in zip(
+            np.argwhere(x == r"\begin{obeylines}").flatten(),
+            np.argwhere(x == r"\end{obeylines}").flatten(),
+        ):
+            lines = x[idx1 + 1 : idx2]
+
+            # \n in the document is loaded as \\n.
+            lines = [
+                y.replace("\\n", "\n")
+                for y in lines
+                if not (y.startswith("\\") or y == "" or y.startswith("%"))
+            ]
+
+        return lines
+
+    song_contents_clean = [
+        preprocess(song_content, song_path)
+        for (song_content, song_path) in zip(song_contents, song_paths)
+    ]
+    return song_contents_clean
+
+
+def check_for_conflicting_names(p1, p2):
+    p1 = set([os.path.basename(p_).split(".")[0] for p_ in p1])
+    p2 = set([os.path.basename(p_).split(".")[0] for p_ in p2])
+    assert (
+        len(p1.intersection(p2)) == 0
+    ), "Conflicting names found in /tex/ and /txt/ folder."
+    return
+
+
+def write_preprocessed_songs(project, content, path_in):
+
+    for c, p_in in zip(content, path_in):
+
+        path_out = os.path.join(
+            project,
+            "lyrics",
+            "01_preprocessed",
+            f'{os.path.basename(p_in).split(".")[0]}.txt',
+        )
+        with open(path_out, "w") as f:
+            f.write("\n".join(c))
+
+    return
+
+def find_preprocessed_lyrics(project_path):
+    # Find the songs in the txt folder.
+    txt_folder = os.path.join(project_path, "lyrics", "01_preprocessed")
+    txt = [
+        os.path.join(txt_folder, x)
+        for x in os.listdir(txt_folder)
+        if x.endswith(".txt")
+    ]
+
+    return txt
+
+def find_pptx_lyrics(project_path):
+    # Find the songs in the pptx folder.
+    pptx_folder = os.path.join(project_path, "lyrics", "02_pptx")
+    pptx = [
+        os.path.join(pptx_folder, x)
+        for x in os.listdir(pptx_folder)
+        if x.endswith(".pptx")
+    ]
+
+    return pptx
+
+def find_pdf_lyrics(project_path):
+    # Find the songs in the pdf folder.
+    pdf_folder = os.path.join(project_path, "lyrics", "03_pdf")
+    pdf = [
+        os.path.join(pdf_folder, x)
+        for x in os.listdir(pdf_folder)
+        if x.endswith(".pdf")
+    ]
+
+    return pdf
+
+def read_preprocessed_lyrics(song_paths):
+    song_contents = [[x.replace('\n','') for x in open(infile, "r").readlines()] for infile in song_paths]
+    return song_contents
+
+def create_pptx(list_of_lyrics, out_path):
+
+    # Load the config file.
+    background_color, font_color, font_name, font_bold, font_size = load_config(
+        './revue_template/config.yaml'
+    )
+
+    pptx = PPTXSong(background_color, font_color, font_name, font_bold, font_size)
+
+    for line in list_of_lyrics:
+        pptx.add_slide(line)
+
+    pptx.save(out_path)
+    return 
+
+
