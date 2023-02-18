@@ -140,7 +140,7 @@ class PPTXSong:
         p = text_frame.paragraphs[0]
 
         n_line = 1
-        for s in string.split("\n"):
+        for s in string.split("\\n"):
             # Remove leading and trailing spaces.
             s = s.strip()
 
@@ -199,7 +199,7 @@ def pptx_to_png(infile, outfolder):
 
     # Convert the pptx to a pdf.
     os.system(f"unoconv {infile} -f pdf > /dev/null 2>&1")
-
+    
     # Grab the name of the infile (but as pdf).
     infile_pdf = infile.replace(".pptx", ".pdf")
 
