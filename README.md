@@ -8,17 +8,21 @@ RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of 
 
 ## Getting Started with RAVA
 
-Getting started with RAVA is easy. If you have not used RAVA before, the first step is cloning it. 
+Getting started with RAVA should be fairly easy! If you have not used RAVA before, the first step is cloning it from this GitHub repository. 
 
 ```
 git clone https://github.com/vstenby/RevueAVAssistant.git
 ```
 
-Once you have cloned the repository, try navigating to the folder and calling the RAVA script with `--help` to see which arguments you can give. Depending on where you cloned the repository, it could look something like this:
+RAVA uses [unoconv](https://formulae.brew.sh/formula/unoconv) to convert powerpoints to pdfs, and it uses [imagemagick](https://formulae.brew.sh/formula/imagemagick) to convert pdfs to png. Verify that your Mac has both by running the commands:
 
 ```
-cd /Users/pfhumor/Documents/RevueAVAssistant/ && python rava.py --help
+unoconv -h 
+convert -h 
 ```
+
+in a terminal. If not, you can install the packages using homebrew by checking out the links above. 
+
 
 ## Understanding RAVA's File Structure
 
