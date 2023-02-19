@@ -197,9 +197,12 @@ def pptx_to_png(infile, outfolder):
     else:
         os.mkdir(outfolder)
 
-    # Convert the pptx to a pdf.
-    os.system(f"unoconv {infile} -f pdf > /dev/null 2>&1")
-    
+    # Convert the pptx to a pdf using soffice.
+    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export {infile} > /dev/null 2>&1")
+
+    #Move the file to where the pptx is located.
+    os.rename(f'{name}.pdf', f'{infile.replace(".pptx", ".pdf")}')
+
     # Grab the name of the infile (but as pdf).
     infile_pdf = infile.replace(".pptx", ".pdf")
 
