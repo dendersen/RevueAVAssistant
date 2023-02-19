@@ -23,7 +23,7 @@ def main():
     
     args = parser.parse_args()
     assert args.project is not None, "--project name not given."
-    assert os.path.exists(args.project), f"The folder {args.project} does not exist. Please copy revue_template and populate the <project>/lyrics/tex/ folder."
+    assert os.path.exists(args.project), f"The folder {args.project} does not exist. Please copy revue_template and populate the <project>/lyrics/00_raw/ folder."
 
     if args.force:
         logging.info('Force flag set - removing 02 and 03 completely. Be aware of QLab not pointing to the correct files anymore.')
@@ -36,16 +36,17 @@ def main():
         print('')
 
     #Find the tex files in the folder.
-    tex_paths = rava_utils.find_tex_lyrics(args.project)
-    
-    #Find the songs and sort. 
-    songs = sorted([os.path.basename(x).replace('.tex','') for x in tex_paths])
+    raw_paths = sorted(rava_utils.find_raw_lyrics(args.project))
 
-    for song in songs:
+    if len(raw_paths) == 0:
+        logging.info(f'No files found in {args.project}/lyrics/00_raw. Quitting.')
+        return
+
+    for p_00 in raw_paths:
+        #p_00 is the raw path, p_01 is the .txt path, p_02 is the .pptx path, p_03 is the .png folder path.
+        song = os.path.basename(p_00).split('.')[0]
+
         logging.info(f'{song}: processing...')
-
-        #p_00 is the tex path, p_01 is the .txt path, p_02 is the .pptx path, p_03 is the .png folder path.
-        p_00 = os.path.join(f'./{args.project}/lyrics/', '00_tex', f'{song}.tex')
         p_01 = os.path.join(f'./{args.project}/lyrics/', '01_preprocessed', f'{song}.txt')
         p_02 = os.path.join(f'./{args.project}/lyrics/', '02_pptx', f'{song}.pptx')
         p_03 = os.path.join(f'./{args.project}/lyrics/', '03_png', f'{song}/')
@@ -53,6 +54,9 @@ def main():
         #If p_01 exists, skip.
         if os.path.exists(p_01):
             logging.info(f'{song}: 00 -> 01 skipped, preprocessed song already exists.')
+        elif p_00.endswith('.txt'):
+            #If the file is already a .txt file, just copy it.
+            shutil.copy(p_00, p_01)
         else:
             rtrn = rava_utils.preprocess_tex(path_in = p_00, path_out = p_01, name = song)
             if rtrn:
@@ -114,7 +118,6 @@ def main():
         print('')
 
     return
-
 
 if __name__ == "__main__":
     main()

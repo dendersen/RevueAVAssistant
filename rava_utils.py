@@ -10,16 +10,16 @@ from pptx.dml.color import RGBColor
 from pptx.util import Pt
 
 
-def find_tex_lyrics(project_path):
+def find_raw_lyrics(project_path):
     # Find the songs in tex folder.
-    tex_folder = os.path.join(project_path, "lyrics", "00_tex")
-    tex = [
-        os.path.join(tex_folder, x)
-        for x in os.listdir(tex_folder)
-        if x.endswith(".tex")
+    raw_folder = os.path.join(project_path, "lyrics", "00_raw")
+    files = [
+        os.path.join(raw_folder, x)
+        for x in os.listdir(raw_folder)
+        if (x.endswith(".tex") or x.endswith('.txt'))
     ]
 
-    return tex
+    return files
 
 def remove_consecutive_blanks(l):
     #Remove consecutive '' elements in a list.
