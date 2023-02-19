@@ -1,12 +1,14 @@
+import itertools
 import logging
 import os
 import shutil
+
 import numpy as np
 import yaml
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Pt
-import itertools
+
 
 def find_tex_lyrics(project_path):
     # Find the songs in tex folder.
@@ -72,14 +74,7 @@ def preprocess_tex(path_in: str, path_out: str, name: str):
 
         clean_lines += lines
 
-    #clean_lines = [x.lstrip() for x in clean_lines if x != '\n']
-    #print(clean_lines)
-
     clean_lines = remove_consecutive_blanks(clean_lines)
-
-    #Remove intial blank lines:
-    #while clean_lines[0] == '\n':
-    #    clean_lines.pop(0)
 
     if len(clean_lines) == 0:
         logging.info(f"No lines found in {path_in}. Skipping.")

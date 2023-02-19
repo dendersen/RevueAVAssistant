@@ -1,10 +1,13 @@
 # Dependencies
-import numpy as np
 import argparse
-import os
 import logging
-import rava_utils
+import os
 import shutil
+
+import numpy as np
+
+import rava_utils
+
 
 def main():
     # Set up the logging.
