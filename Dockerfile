@@ -3,6 +3,7 @@ FROM python:3.8-slim-buster
 RUN useradd app
 
 RUN apt-get update &&\
+    apt-get install tree -y &&\
     apt-get install libreoffice -y &&\
     apt-get install ghostscript -y &&\
     apt-get install imagemagick -y &&\
