@@ -49,8 +49,6 @@ Navigate into your folder by writing `cd RevueAVAssistant`, and the `tree` comma
     └── video
 ```
 
-hello 
-
 ### Building the Dockerfile
 
 In this section, you are going to be building your Dockerfile. This only needs to be done once, and once you have built your Docker image, you don't need to worry about it anymore!
@@ -91,6 +89,24 @@ If you click the **CLI** (command-line interface) button seen above, you are now
 
 <img width="1120" alt="container_checks" src="https://user-images.githubusercontent.com/35364024/221358142-01834d13-98d9-4ed7-aace-628de178afa8.png">
 
-In the terminal you have started inside of your Docker container, navigate to the `RevueAVAssistant` folder by writing ```cd /RevueAVAssistant```. Writing `tree` should confirm that you are now inside of the `RevueAVAssistant` folder, but through your Docker container! 
+In the terminal you have started inside of your Docker container, navigate to the `RevueAVAssistant` folder by writing 
+
+```
+cd /RevueAVAssistant
+```
+
+and writing `tree` should allow you to see all of the files! Congratulations - you now know how to build a Docker image and how to open an interactive session inside of your container. Docker is a nifty tool for making code run on different machines, so I hope you've learned a thing or two! 
+
+While setting this up might have taken you a bit of time, believe me, it's **much** easier than having to install all of these packages on your own machine and getting it to run there!
+
+Since the container is running in the background, remember to close it once you're done with it and need your RAM for something else (QLab, for instance!)
+
+<img width="1245" alt="docker_delete" src="https://user-images.githubusercontent.com/35364024/221359735-72423bd5-527a-45a0-98d6-bb0b1994ff08.png">
+
+Also remember that built Docker images take up space on your computer, so clean up through Docker Desktop every once in a while!
+
+<img width="1245" alt="docker_clean" src="https://user-images.githubusercontent.com/35364024/221359843-9468fb2f-41ec-4a26-9bf3-2651404c5065.png">
+
 
 # Examples
+
