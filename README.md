@@ -108,5 +108,185 @@ Also remember that built Docker images take up space on your computer, so clean 
 <img width="1245" alt="docker_clean" src="https://user-images.githubusercontent.com/35364024/221359843-9468fb2f-41ec-4a26-9bf3-2651404c5065.png">
 
 
-# Examples
+# Learning by Doing
 
+## Doing the First Pass
+
+You, of course having read the entire guide thus far, are now an expert in Docker and know how to spin up a Docker container and navigate the terminal. In your interactive terminal inside of the Docker container, navigate to the `/RevueAVAssistant` folder from before.
+
+Paste the following lyrics
+
+```
+Skema B, den med Michael P
+Mere underholdende end skema A og C
+Med sit smil, og sin læringsstil
+Lærer Michael dig at bruge Eulers tal og pi
+Husk’ hel’ pensum? Helt umuligt
+Men jeg består nu - helt utroligt!
+```
+into a file called `skema_b.txt` inside of the `/RevueAVAssistant/project_template/lyrics/00_raw/` folder on *your local machine*. Similarly, place the lyrics below into `dataanalyse.txt` located in the same folder.
+
+```
+Du’ et fedt datasæt
+Min analyse bliver let
+Ingen manglende værdier
+Alt kontinuert 
+Nu skal jeg til at ta’ et valg
+Om middel eller typetal 
+Hørte de sku’ vær’ de bedste 
+Men det er forkert
+
+Medianer
+Gennemsnittets bror
+Smarter’ end man tror
+Medianer
+Dem beregner jeg
+```
+
+You can verify that the folder is mounted and therefore can be read from inside your container by writing `tree`. Now to the fun part! Write 
+
+```
+python rava.py --project revue_template
+```
+
+and let RAVA do its job. Once done, you should see that your container with RAVA has populated the folder on your local machine!
+
+<img width="1265" alt="populated" src="https://user-images.githubusercontent.com/35364024/221361256-8c39e05b-fdfc-4265-ba91-7496c7ffbd8f.png">
+
+## Reflecting a bit on the Pipeline
+
+Having created your first pngs, let's understand a bit of how RAVA works under the hood. 
+
+* The `00_raw` folder is used to store your raw lyrics. You can put `.tex` files here, but you can also play it safe and put `.txt` files here.
+    *  If you place `.tex` files here, then `preprocess_tex` from `rava_utils.py` will try and clean up your messy `.tex` file, extract the lyrics and dump it into `01_preprocessed`. Experience tells me that because people always put a lot of garbage into the `.tex` files, then most often or not, I have not accounted for some stupid edge case and the function fails somehow. 
+   
+    *  If you place `.txt` files here, nothing will happen and it will be copied to the `01_preprocessed` folder. This is pretty easy.
+    
+* The `01_preprocessed` folder is for preprocessed lyrics. We will edit this in a bit.
+
+* The `02_pptx` folder is for the powerpoints.
+
+* The `03_png` folder contains a subfolder for each song, here `dataanalyse` and `skema_b`. 
+    * The `dataanalyse` folder has 14 pngs in total, one for each line in `01_preprocessed/dataanalyse.txt`. 
+    * The `skema_b` folder has 6 pngs in total, one for each line in `01_preprocessed/skema_b.txt`. 
+
+## Fixing Errors
+
+Fixing errors is a **big** part of the work. Lyrics don't match up with what singers are singing, and sometimes the lines breaks aren't where we want them to be. Let's have a look at the 6 pngs that RAVA produced. 
+
+`000.png`| `001.png` | `002.png` | `003.png` | `004.png` | `005.png` 
+:-:|:-:|:-:|:-:|:-:|:-:|
+![skema_b_000](https://user-images.githubusercontent.com/35364024/221361749-80114a7a-df6d-4488-93ab-76d4e340680b.png)|![skema_b_001](https://user-images.githubusercontent.com/35364024/221361755-9e04f784-4365-428e-be9d-5b3fa69c2a15.png)|![skema_b_002](https://user-images.githubusercontent.com/35364024/221361761-a179112e-7b1c-4c64-bd0e-daa02ad96d8e.png)|![skema_b_003](https://user-images.githubusercontent.com/35364024/221361778-2b8b2580-e8ff-4dfc-8483-41f1cceef6d6.png)|![skema_b_004](https://user-images.githubusercontent.com/35364024/221361788-07cf94b2-7f4e-44d4-adb5-5deea77f9260.png)|![skema_b_005](https://user-images.githubusercontent.com/35364024/221361790-7c33f79f-ef32-4078-b0e0-6b0372963bd0.png)
+
+I have found a few changes that I want to make - for instance, I would like specify some of the line breaks and I would like to split some of the lyrics up across multiple slides. I do this by modifying `01_preprocessed/skema_b.txt` and change it to the following:
+
+```
+Skema B!
+Den med Michael P!
+Mere underholdende \n end skema A og C
+Med sit smil, \n og sin læringsstil
+Lærer Michael dig \n at bruge Eulers tal og pi
+Husk’ hel’ pensum? Helt umuligt
+Men jeg består nu - helt utroligt!
+```
+
+I save the song and rerun RAVA from my Docker container by calling `python rava.py --project revue_template`. 
+
+```
+# python rava.py --project revue_template
+RevueAVAssistant: 2023-02-25 14:27:13,104 - INFO - dataanalyse: processing...
+RevueAVAssistant: 2023-02-25 14:27:13,107 - INFO - dataanalyse: 00 -> 01 skipped, preprocessed song already exists.
+RevueAVAssistant: 2023-02-25 14:27:13,112 - INFO - dataanalyse: 01 -> 02 skipped, pptx is up to date.
+RevueAVAssistant: 2023-02-25 14:27:13,118 - INFO - dataanalyse: 02 -> 03 skipped. png is already up to date.
+
+RevueAVAssistant: 2023-02-25 14:27:13,118 - INFO - skema_b: processing...
+RevueAVAssistant: 2023-02-25 14:27:13,123 - INFO - skema_b: 00 -> 01 skipped, preprocessed song already exists.
+RevueAVAssistant: 2023-02-25 14:27:13,385 - INFO - skema_b: 01 -> 02 done.
+RevueAVAssistant: 2023-02-25 14:27:13,394 - INFO - skema_b: 02 -> 03 creating pngs, please wait...
+RevueAVAssistant: 2023-02-25 14:27:24,618 - INFO - skema_b: 02 -> 03 complete, 7 pngs written to ./revue_template/lyrics/03_png/skema_b/.
+```
+
+Let's have a look at the pngs again!
+
+`000.png`| `001.png` | `002.png` | `003.png` | `004.png` | `005.png` | `006.png` |
+:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+![skema_b_000](https://user-images.githubusercontent.com/35364024/221362359-1457cb49-00a4-4111-8602-8f1e49516753.png)|![skema_b_001](https://user-images.githubusercontent.com/35364024/221362362-53bbeb83-11b9-45e4-88ea-b46e9cca1847.png)|![skema_b_002](https://user-images.githubusercontent.com/35364024/221362365-b0a44bde-9cc2-48ce-b352-f9281832cf54.png)|![skema_b_003](https://user-images.githubusercontent.com/35364024/221362366-96e28f9e-f897-4b43-b07d-fd5309fa7d35.png)|![skema_b_004](https://user-images.githubusercontent.com/35364024/221362367-6a4bac8b-f0fa-46fe-8545-65252900f189.png)|![skema_b_005](https://user-images.githubusercontent.com/35364024/221362368-0fcd8e7d-bb78-469b-b8dd-6ee5e5d47a66.png)|![skema_b_006](https://user-images.githubusercontent.com/35364024/221362369-0e133e52-d79a-415a-95ca-40223bcc3b7f.png)
+
+Great! From this, you've learned the essentials of going from the `.txt` file in the `01_preprocessed` folder to the pngs.
+* Each line corresponds to a png. 
+    * Blank lines will give you a black screen (check `01_preprocessed/dataanalyse.txt` and `dataanalyse_008.png`!) 
+* Add `\n` if you want to control where the line breaks.
+* When rerunning RAVA, it will check whether or not `01_preprocessed` is newer than `03_png` for that specific song. If so, it will remake the `.pptx` file and then the `png` files. 
+
+## Creating Your Own Project
+
+Now let's create your own project. Delete the files in `00_raw`, `01_preprocessed`, `02_pptx` and delete the subfolders `skema_b` and `dataanalyse` in the `03_png` folder. Copy the `revue_template` and rename it something new, e.g. `Revue2022`.
+
+<img width="1267" alt="new_project" src="https://user-images.githubusercontent.com/35364024/221362830-6fcfede5-378e-488d-8b3d-802b11034a57.png">
+
+Take all of your `tex` songs (or `txt`) and dump them in your newly created folder. Calling `tree` from the container terminal allows you see your files before you use RAVA.
+
+```
+# tree
+.
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── Revue2022
+│   ├── config.yaml
+│   ├── images
+│   ├── lyrics
+│   │   ├── 00_raw
+│   │   │   ├── Acapella.tex
+│   │   │   ├── Afslutningsnummer.tex
+│   │   │   ├── Åbningsnummer.tex
+│   │   │   ├── Dataanalyse.tex
+│   │   │   ├── Endnu_en.tex
+│   │   │   ├── Frihed.tex
+│   │   │   ├── Første_spacer_paa_maanen.tex
+│   │   │   ├── General_engineering.tex
+│   │   │   ├── Hotel_Kampsax.tex
+│   │   │   ├── ICE_Kongen.tex
+│   │   │   ├── Imponerer_mig_ik.tex
+│   │   │   ├── Karls_sang.tex
+│   │   │   ├── Manden_i_anden_kvadrant.tex
+│   │   │   ├── Olkroket.tex
+│   │   │   ├── Skema_B.tex
+│   │   │   └── Ups_jeg_dumpede_igen.tex
+│   │   ├── 01_preprocessed
+│   │   ├── 02_pptx
+│   │   └── 03_png
+│   ├── other
+│   ├── qlab
+│   ├── sound
+│   └── video
+├── rava.py
+├── rava_utils.py
+├── requirements.txt
+└── revue_template
+    ├── config.yaml
+    ├── images
+    ├── lyrics
+    │   ├── 00_raw
+    │   ├── 01_preprocessed
+    │   ├── 02_pptx
+    │   └── 03_png
+    ├── other
+    ├── qlab
+    ├── sound
+    └── video
+```
+
+and then again, we call `rava.py`, only this time, change the `--project` argument to the folder in which you have your songs. For me, that would be:
+
+```
+python rava.py --project Revue2022
+```
+
+and grab a cup of tea or go for a walk. The `pdf` to `png` step takes a while, so have patience! You can follow along in the log to see how it's going, and if the `01_preprocessed` file is empty, it means that something went wrong in the `tex -> txt` step. And then you'll have to fix the errors, rerun the script, ...
+
+# Closing Remarks
+
+This concludes the documentation of RAVA! QLab is an entirely different beast which takes quite a lot of time to set up and learn, so having familiarized yourself with RAVA before starting out with QLab is definitely a good thing.
+
+Also, if you have any suggestions or improvements for RAVA, again, feel free to contact me. 
