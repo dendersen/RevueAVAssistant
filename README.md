@@ -108,7 +108,9 @@ Also remember that built Docker images take up space on your computer, so clean 
 <img width="1245" alt="docker_clean" src="https://user-images.githubusercontent.com/35364024/221359843-9468fb2f-41ec-4a26-9bf3-2651404c5065.png">
 
 
-# Learning by Doing
+# Tutorial
+
+Having done all of the above, you're ready for the tutorial! This will show you the basic ins and outs of RAVA.
 
 ## Doing the First Pass
 
