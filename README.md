@@ -291,4 +291,4 @@ and grab a cup of tea or go for a walk. The `pdf` to `png` step takes a while, s
 
 This concludes the documentation of RAVA! QLab is an entirely different beast which takes quite a lot of time to set up and learn, so having familiarized yourself with RAVA before starting out with QLab is definitely a good thing.
 
-Also, if you have any suggestions or improvements for RAVA, again, feel free to contact me. 
+If you have any suggestions or improvements for RAVA, again, feel free to contact me. Also make sure to give this repository a star if you enjoyed it!
