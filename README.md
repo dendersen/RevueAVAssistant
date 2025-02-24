@@ -8,6 +8,58 @@ RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of 
 
 If you have any questions regarding RAVA, feel free to reach out either through creating a new [Issue](https://github.com/dendersen/RevueAVAssistant/issues) or by sending me an [email](mailto:dxyz@mtdm.dk).
 
+## Easy mode
+hi, this is the new fork of RAVA. While making it easier to avoid the headaches that song writers love giving us, i ended up making this easy mode guide. The actually good guide underneath is still correct and much better written.<br>
+
+### begining
+if you are complete noob just download the file called <br>
+
+```commandLine/all_prep.bat```
+
+this one file can do a lot for you, it will install git, install docker and clone the repository. now if you know how to do any of them by yourself don't use it.<br>
+
+instead make sure you have a resent docker installed and git installed the run
+
+```git clone https://github.com/dendersen/RevueAVAssistant.git```
+
+this will clone the repository so you are ready to begin
+
+
+### magic files
+open the new folder called ```RevueAVAssistant```
+
+in here a folder called commandline has all you really need to prepare. simply run 
+```install.bat``` to prepare, this will prepare docker and only has to be run once.
+
+now we are ready simply click ```run.bat``` to start the programme
+
+### remember the lyrics
+
+unfortunatly you have to make the correct folder structure, i suggest copying ```revue_template``` and calling it whatever you want. then simply copy your lyrics into the correct folder:<br>
+```name/lyrics/oo_raw```<br>
+do remember to place the ```\begin{obeylines}``` and ```\end{obeylines}``` that the song writers definetly forgot.
+
+### DIY
+
+inside the command line you now have to do things yourself unfortunatly but it will be very little
+
+always start by typing ```cd RevueAVAssistant```<br>
+this will open the folder with the script.
+
+then ```python rava.py --project name``` will process the data in the folder called whatever you write instead of name. <br>
+
+
+### reruns
+
+so you made some changes, probably som \textit left in the middle of the lyrics<br>
+you do need to remove some files, ```name/lyrics/01_preprocessed``` and ```name/lyrics/02_pptx``` has the files. remove the files with the name of the song that needs to be rerun. and the 
+
+### giving up (or cleaning up after revue)
+
+so to delete everything don't just remove the folder as this will still eat a bit of space instead, start by calling ```clean.bat``` from the ```commandLine``` folder this undoes the effect of ```install.bat``` and will have to be run again if you want to use RAVA.
+
+### the original guide comes now
+
 ## Getting Started with RAVA
 
 ### Docker
