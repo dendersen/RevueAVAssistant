@@ -61,8 +61,8 @@ def preprocess_tex(path_in: str, path_out: str, name: str):
 
     # Loop over the \begin{obeylines} and \end{obeylines} and take everything in between.
     for idx1, idx2 in zip(begin_obeylines, end_obeylines):
-        lines = list(tex_lines[idx1 + 1 : idx2])
-        lines = [x.replace("\\n", "\n") for x in lines]
+        lines:list[str] = list(tex_lines[idx1 + 1 : idx2])
+        lines = [x.replace("\\n", "\n").replace("\\newline", "\n").replace("\\\\", "\n") for x in lines]
 
         lines = [
             x
