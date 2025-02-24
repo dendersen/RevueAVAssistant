@@ -6,7 +6,7 @@ RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of 
 <img src="https://user-images.githubusercontent.com/35364024/154814545-f17f99f9-2893-4633-b5ff-43eb7d128a6b.png" width="450">
 </p>
 
-If you have any questions regarding RAVA, feel free to reach out either through creating a new [Issue](https://github.com/vstenby/RevueAVAssistant/issues/new) or by sending me an [email](mailto:viktor.s.johansson@hotmail.com).
+If you have any questions regarding RAVA, feel free to reach out either through creating a new [Issue]([https://github.com/vstenby/RevueAVAssistant/issues/new](https://github.com/dendersen/RevueAVAssistant/issues)) or by sending me an [email](mailto:dxyz@mtdm.dk).
 
 ## Getting Started with RAVA
 
@@ -21,7 +21,7 @@ You can check that Docker is working correctly in your machine by typing `docker
 Assuming you have set up Docker on your machine, you now have to clone this repository. You can do that by writing the following in your terminal:
 
 ```
-git clone https://github.com/vstenby/RevueAVAssistant.git
+git clone https://github.com/dendersen/RevueAVAssistant.git
 ```
 
 Navigate into your folder by writing `cd RevueAVAssistant`, and the `tree` command should look something like this:
@@ -78,7 +78,7 @@ Now, I'll show you how to start a Docker container. Generally it's a good idea t
 First, make sure that you are inside the `RevueAVAssistant` folder in your terminal. This can be checked using `pwd` and should return something along the lines of `/.../.../RevueAVAssistant`. If you are in the right folder in your terminal, then copy the following line into your terminal and press return.
 
 ```
-docker run -dit -m 2g --name rava -v "$(pwd)":/RevueAVAssistant rava-docker
+docker run -dit --name rava rava-docker
 ```
 
 This should spin up a container with that you just built. The container is mounted on your local computer, so that the `RevueAVAssistant` folder in your container is the same as the `RevueAVAssistant` folder on your computer, but we'll see that later. You can verify that you succesfully started your container by checking the Docker Desktop app.
