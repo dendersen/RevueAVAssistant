@@ -6,7 +6,7 @@ RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of 
 <img src="https://user-images.githubusercontent.com/35364024/154814545-f17f99f9-2893-4633-b5ff-43eb7d128a6b.png" width="450">
 </p>
 
-If you have any questions regarding RAVA, feel free to reach out either through creating a new [Issue]([https://github.com/dendersen/RevueAVAssistant/issues]) or by sending me an [email](mailto:dxyz@mtdm.dk).
+If you have any questions regarding RAVA, feel free to reach out either through creating a new [Issue](https://github.com/dendersen/RevueAVAssistant/issues) or by sending me an [email](mailto:dxyz@mtdm.dk).
 
 ## Getting Started with RAVA
 
