@@ -68,9 +68,17 @@ def preprocess_tex(path_in: str, path_out: str, name: str):
             x
             for x in lines
             if not (
-                x.startswith("\\") or x == "" or x.startswith("%") or r"\vspace" in x
+                x.startswith("\\") or x == "" or x.startswith("%")
             )
         ]
+        
+        #new \vspace filtering
+        for i, line in enumerate(lines):
+            if "\\vspace" in line:
+                things = lines[i].split("\\vspace")[0]
+                line[i] = things[0]
+                if(things[1].split("}",1)[1] != ""):
+                    lines.insert(i+1, things[1].split("}",1)[1])
 
         clean_lines += lines
 
