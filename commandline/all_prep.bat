@@ -6,7 +6,7 @@ pause
 winget install -e --id Git.Git
 winget install -e --id Docker.DockerDesktop
 echo "git and docker has been installed"
-echo "this will now clone the repository"
+echo "this will now clone the repository, don't continue if the repository has already been cloned"
 pause
 git clone https://github.com/dendersen/RevueAVAssistant.git
 cd RevueAVAssistant
