@@ -1,3 +1,4 @@
+@echo off
 cd..
 docker remove rava
 docker rmi rava-docker
