@@ -1,4 +1,4 @@
-##knwon issues:
+## knwon issues:
 
 * long songs may end up not outputing all images, they will be in powerpoint, split the text into multiple files until fixed
 * text flair added by singesr isn't removed or handled in any way
