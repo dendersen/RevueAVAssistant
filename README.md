@@ -1,3 +1,8 @@
+##knwon issues:
+
+* long songs may end up not outputing all images, they will be in powerpoint, split the text into multiple files until fixed
+* text flair added by singesr isn't removed or handled in any way
+
 # RAVA - the Revue AV Assistant
 
 RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of repetitive AV tasks for the pf revue. It helps with folder structure, creating and updating songs for QLab. 
