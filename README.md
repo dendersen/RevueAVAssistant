@@ -45,7 +45,7 @@ open the new folder called ```RevueAVAssistant```
 in here a folder called commandline has all you really need to prepare. simply run 
 ```install.bat``` to prepare, this will prepare docker and only has to be run once.
 
-now we are ready simply click ```run.bat``` to start the programme
+now we are ready simply click ```run_docker.bat``` to start the programme
 
 ### remember the lyrics
 

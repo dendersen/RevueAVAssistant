@@ -1,4 +1,3 @@
-@echo off
 cd ..
 
 if [ -d "./.venv" ]; then
@@ -6,7 +5,7 @@ if [ -d "./.venv" ]; then
 else
   echo Creating virtual environment...
   python -m venv .venv
-  .venv\Scripts\activate.bat
+  source .venv/bin/activate
   .venv/bin/pip install --upgrade pip
   .venv/bin/pip install -r requirements.txt
 fi
