@@ -7,13 +7,13 @@ import numpy as np
 import yaml
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.util import Pt
+from pptx.util import Emu, Pt, Inches
 
 
-def find_raw_lyrics(project_path):
+def find_raw_lyrics(project_path:str) -> list[str]:
     # Find the songs in tex folder.
-    raw_folder = os.path.join(project_path, "lyrics", "00_raw")
-    files = [
+    raw_folder: str = os.path.join(project_path, "lyrics", "00_raw")
+    files: list[str] = [
         os.path.join(raw_folder, x)
         for x in os.listdir(raw_folder)
         if (x.endswith(".tex") or x.endswith('.txt'))
@@ -21,9 +21,9 @@ def find_raw_lyrics(project_path):
 
     return files
 
-def remove_consecutive_blanks(l):
+def remove_consecutive_blanks(l:list[str]) -> list[str]:
     #Remove consecutive '' elements in a list.
-    res = []
+    res:list[str] = []
 
     for key, group in itertools.groupby(l, lambda x : x=='\n'):
         # check key=='' or not
@@ -36,16 +36,20 @@ def remove_consecutive_blanks(l):
 
     return res
 
-def preprocess_tex(path_in: str, path_out: str, name: str):
+def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
     """
     Preprocess the tex file.
+    returns True when the file was valid
+    returns False when the file was invalid
+    
+    lines are written to path_out, but if the file is invalid, the output file will not be touched
     """
     # Read the tex file.
     with open(path_in, "r") as f:
-        tex_lines = np.array(f.readlines())
+        tex_lines: np.ndarray = np.array(f.readlines())
 
     # Take everything between the \begin{obeylines} and \end{obeylines}.
-    begin_obeylines = np.argwhere(
+    begin_obeylines: np.ndarray = np.argwhere(
         [r"\begin{obeylines}" in x for x in tex_lines]
     ).flatten()
     end_obeylines = np.argwhere([r"\end{obeylines}" in x for x in tex_lines]).flatten()
@@ -53,11 +57,11 @@ def preprocess_tex(path_in: str, path_out: str, name: str):
     # Assert that we have the same number of \begin{obeylines} and \end{obeylines}.
     assert len(begin_obeylines) == len(
         end_obeylines
-    ), f"Number of \begin{{obeylines}} and \end{{obeylines}} do not match in {path_in}."
+    ), f"Number of \\begin{{obeylines}} and \\end{{obeylines}} do not match in {path_in}."
     if len(begin_obeylines) == 0:
-        return 1
+        return False
 
-    clean_lines = []
+    clean_lines:list[str] = []
 
     # Loop over the \begin{obeylines} and \end{obeylines} and take everything in between.
     for idx1, idx2 in zip(begin_obeylines, end_obeylines):
@@ -76,9 +80,9 @@ def preprocess_tex(path_in: str, path_out: str, name: str):
         for i, line in enumerate(lines):
             if "\\vspace" in line:
                 things = lines[i].split("\\vspace")[0]
-                line[i] = things[0]
+                lines[i] = things[0]
                 if(things[1].split("}",1)[1] != ""):
-                    lines.insert(i+1, things[1].split("}",1)[1])
+                    lines[i] += "\n" + things[1].split("}",1)[1]
 
         clean_lines += lines
 
@@ -86,31 +90,29 @@ def preprocess_tex(path_in: str, path_out: str, name: str):
 
     if len(clean_lines) == 0:
         logging.info(f"No lines found in {path_in}. Skipping.")
-        return
+        return False
 
     # Write the preprocessed lines to the outpath.
     with open(path_out, "w") as f:
         f.writelines(clean_lines)
 
-    return 0
+    return True
 
-
-def load_config(path):
+def load_config(path:str) -> tuple[RGBColor, RGBColor, str, bool, Pt]:
 
     with open(path) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     background_color = RGBColor(*tuple(config["project"]["background_color"]))
     font_color = RGBColor(*tuple(config["project"]["font_color"]))
-    font_name = config["project"]["font_name"]
-    font_bold = config["project"]["font_bold"]
+    font_name = str(config["project"]["font_name"])
+    font_bold = bool(config["project"]["font_bold"])
     font_size = Pt(config["project"]["font_size"])
 
     return background_color, font_color, font_name, font_bold, font_size
 
-
 class PPTXSong:
-    def __init__(self, background_color, font_color, font_name, font_bold, font_size):
+    def __init__(self, background_color: RGBColor, font_color: RGBColor, font_name: str, font_bold: bool, font_size: Pt):
 
         self.prs = Presentation()
         self.background_color = background_color
@@ -119,7 +121,7 @@ class PPTXSong:
         self.font_bold = font_bold
         self.font_size = font_size
 
-    def add_slide(self, string):
+    def add_slide(self, text:str):
         """
         Adds a slide with input string. \n means new line, and <blank> is a blank slide.
         """
@@ -127,6 +129,9 @@ class PPTXSong:
         title_slide_layout = self.prs.slide_layouts[5]
         slide = self.prs.slides.add_slide(title_slide_layout)
         title = slide.shapes.title
+        if title is None:
+            logging.warning("No title placeholder found in the slide layout. This should not happen, check the template.")
+            return
 
         background = slide.background
         fill = background.fill
@@ -134,16 +139,24 @@ class PPTXSong:
         fill.fore_color.rgb = self.background_color
 
         # Make the box take up the entire thing.
-        title.left = 0
-        title.width = self.prs.slide_width
-        title.height = self.prs.slide_height
+        title.left = Inches(0)
+        slide_width:Emu | None = self.prs.slide_width # type: ignore
+        slide_height:Emu | None = self.prs.slide_height # type: ignore
+        if slide_width is None:
+            logging.warning("No slide width found in the presentation. This should not happen, check the template.")
+            return
+        if slide_height is None:
+            logging.warning("No slide height found in the presentation. This should not happen, check the template.")
+            return
+        title.width = slide_width
+        title.height = slide_height
 
         # Add the text and change the font.
         text_frame = title.text_frame
         p = text_frame.paragraphs[0]
 
         n_line = 1
-        for s in string.split("\\n"):
+        for s in text.split("\\n"):
             # Remove leading and trailing spaces.
             s = s.strip()
 
@@ -165,18 +178,24 @@ class PPTXSong:
 
         return
 
-    def save(self, outpath):
+    def save(self, outpath:str):
         """
         Save the presentation.
         """
         self.prs.save(outpath)
 
-
-def create_pptx(list_of_lyrics, out_path):
+def create_pptx(list_of_lyrics:list[str], out_path:str):
 
     # Load the config file.
+    
+    background_color: RGBColor
+    font_color: RGBColor
+    font_name: str
+    font_bold: bool
+    font_size: Pt
+
     background_color, font_color, font_name, font_bold, font_size = load_config(
-        "./revue_template/config.yaml"
+        os.path.join(".", "revue_template", "config.yaml")
     )
     pptx = PPTXSong(background_color, font_color, font_name, font_bold, font_size)
     
@@ -187,11 +206,11 @@ def create_pptx(list_of_lyrics, out_path):
     return
 
 
-def pptx_to_png(infile, outfolder):
-    assert infile.endswith(".pptx"), "Infile should be a .pptx"
+def pptx_to_png(pptxPath:str, outfolder:str):
+    assert pptxPath.endswith(".pptx"), "pptxPath should be a .pptx file"
 
     # Get the name of the song from the .pptx file.
-    name = os.path.basename(infile).replace(".pptx", "")
+    name = os.path.basename(pptxPath).replace(".pptx", "")
 
     if os.path.isdir(outfolder):
         # If the subfolder exists, nuke it.
@@ -201,13 +220,13 @@ def pptx_to_png(infile, outfolder):
         os.mkdir(outfolder)
 
     # Convert the pptx to a pdf using soffice.
-    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export {infile} > /dev/null 2>&1")
+    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export {pptxPath} > /dev/null 2>&1")
 
     #Move the file to where the pptx is located.
-    os.rename(f'{name}.pdf', f'{infile.replace(".pptx", ".pdf")}')
+    os.rename(f'{name}.pdf', f'{pptxPath.replace(".pptx", ".pdf")}')
 
     # Grab the name of the infile (but as pdf).
-    infile_pdf = infile.replace(".pptx", ".pdf")
+    infile_pdf = pptxPath.replace(".pptx", ".pdf")
 
     # Convert the pdf to .pngs.
     os.system(
