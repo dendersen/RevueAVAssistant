@@ -2,10 +2,9 @@
 import argparse
 import logging
 import os
-import shutil
 
 import rava_utils
-
+import shutil
 
 def main():
     # Set up the logging.
@@ -17,21 +16,10 @@ def main():
     # Set up the arguments and parse it.
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     parser.add_argument("--project", type=str, help='Project name, e.g. "revue_2022".')
-    parser.add_argument("--force", action='store_true', help='Force the processing of all songs. (Default: False)')
     
     args: argparse.Namespace = parser.parse_args()
     assert args.project is not None, "--project name not given."
     assert os.path.exists(args.project), f"The folder {args.project} does not exist. Please copy revue_template and populate the <project>/lyrics/00_raw/ folder."
-
-    if args.force:
-        logging.info('Force flag set - removing 02 and 03 completely. Be aware of QLab not pointing to the correct files anymore.')
-        shutil.rmtree(os.path.join(args.project, 'lyrics', '02_pptx'))
-        shutil.rmtree(os.path.join(args.project, 'lyrics', '03_png'))
-
-        #Make the folders again.
-        os.makedirs(os.path.join(args.project, 'lyrics', '02_pptx'))
-        os.makedirs(os.path.join(args.project, 'lyrics', '03_png'))
-        print('')
 
     #Find the tex files in the folder.
     raw_paths:list[str] = sorted(rava_utils.find_raw_lyrics(args.project))
