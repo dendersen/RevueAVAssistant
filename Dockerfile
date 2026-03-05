@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3-slim
 
 RUN useradd app
 
@@ -21,4 +21,4 @@ ADD requirements.txt requirements.txt
 RUN python -m pip install -U pip &&\
     python -m pip install -r requirements.txt
 
-ENTRYPOINT ["bin/bash -c 'cd RevueAVAssistant'"]
+ENTRYPOINT ["bin/bash -c 'cd RevueAVAssistant;/bin/bash'"]

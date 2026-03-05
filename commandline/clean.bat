@@ -1,5 +1,5 @@
 @echo off
 cd..
-docker remove rava
+docker rm rava
 docker rmi rava-docker
 pause
