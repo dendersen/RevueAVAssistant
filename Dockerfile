@@ -21,4 +21,4 @@ ADD requirements.txt requirements.txt
 RUN python -m pip install -U pip &&\
     python -m pip install -r requirements.txt
 
-ENTRYPOINT ["bin/bash"]
+ENTRYPOINT ["bin/bash -c 'cd RevueAVAssistant'"]

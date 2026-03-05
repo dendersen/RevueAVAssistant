@@ -12,6 +12,8 @@ still supporting docker though
 
 * exe file generation
 
+* simpler rava running
+
 ## introduction
 
 RAVA, the Revue AV Assistant, is a tool created to greatly reduce the amount of repetitive AV tasks for the pf revue. It helps with folder structure, creating and updating songs for QLab. 
@@ -57,16 +59,13 @@ do remember to place the ```\begin{obeylines}``` and ```\end{obeylines}``` that 
 
 inside the command line you now have to do things yourself unfortunatly but it will be very little
 
-always start by typing ```cd RevueAVAssistant```<br>
-this will open the folder with the script.
-
-then ```python rava.py --project name``` will process the data in the folder called whatever you write instead of name. <br>
+type ```python rava.py --project {name}``` will process the data in the folder called whatever you write your project name instead of {name}. <br>
 
 
 ### reruns
 
-so you made some changes, probably som \textit left in the middle of the lyrics<br>
-you do need to remove some files, ```name/lyrics/01_preprocessed``` and ```name/lyrics/02_pptx``` has the files. remove the files with the name of the song that needs to be rerun. and the 
+so you made some changes, probably som ```\textit``` left in the middle of the lyrics by some singers<br>
+simple run the command from DIY again, i have removed all the requirements for --force and it just always starts over
 
 ### giving up (or cleaning up after revue)
 
