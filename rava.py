@@ -18,8 +18,23 @@ def main():
     parser.add_argument("--project", type=str, help='Project name, e.g. "revue_2022".')
     
     args: argparse.Namespace = parser.parse_args()
-    assert args.project is not None, "--project name not given."
-    assert os.path.exists(args.project), f"The folder {args.project} does not exist. Please copy revue_template and populate the <project>/lyrics/00_raw/ folder."
+    while args.project is None or not os.path.exists(args.project):
+        print("invalid or no project specified, please pick one from the list.")
+        fileList = [item 
+                    for item in os.listdir('.') 
+                    if 
+                        os.path.isdir(item) and 
+                        not item.startswith('.') and 
+                        not item.startswith('_') and
+                        item != 'commandline'
+                    ]
+        for i, item in enumerate(fileList):
+            print(f"{{{i}}} - {item}")
+        target = input("Enter the the project you want to process: ")
+        if target.isdigit() and int(target) in range(len(fileList)):
+            args.project = fileList[int(target)]
+        elif target in fileList:
+            args.project = target
 
     #Find the tex files in the folder.
     raw_paths:list[str] = sorted(rava_utils.find_raw_lyrics(args.project))
@@ -30,6 +45,11 @@ def main():
 
     for path_raw in raw_paths:
         #p_00 is the raw path, p_01 is the .txt path, p_02 is the .pptx path, p_03 is the .png folder path.
+        
+        path_raw_new = path_raw.replace("'","").replace('"','').replace(' ','_').replace('(','').replace(')','').replace('&','').replace('?','').replace('!','').replace(':','').replace(';','').replace("å","aa").replace("æ","ae").replace("ø","oe").replace("Å","Aa").replace("Æ","Ae").replace("Ø","Oe")
+        if path_raw != path_raw_new:
+            os.rename(path_raw, path_raw_new)
+            path_raw = path_raw_new
         song = os.path.basename(path_raw).split('.')[0]
 
         logging.info(f'{song}: processing...')
@@ -45,6 +65,8 @@ def main():
         # if os.path.exists(path_txt):
         #     logging.info(f'{song}: 00 -> 01 skipped, preprocessed song already exists.')
         # elif path_raw.endswith('.txt'):
+        
+        
         if path_raw.endswith('.txt'):
             #If the file is already a .txt file, just copy it.
             shutil.copy(path_raw, path_txt)

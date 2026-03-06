@@ -2,6 +2,7 @@ cd ..
 
 if [ -d "./.venv" ]; then
   echo Virtual environment already exists. Skipping creation.
+  source .venv/bin/activate
 else
   echo Creating virtual environment...
   python -m venv .venv

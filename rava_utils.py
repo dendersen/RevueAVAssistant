@@ -8,7 +8,7 @@ import yaml
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Emu, Pt, Inches
-
+from re import sub
 
 def find_raw_lyrics(project_path:str) -> list[str]:
     # Find the songs in tex folder.
@@ -50,9 +50,18 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
 
     # Take everything between the \begin{obeylines} and \end{obeylines}.
     begin_obeylines: np.ndarray = np.argwhere(
-        [r"\begin{obeylines}" in x for x in tex_lines]
+            [
+                r"\begin{obeylines}" in x or
+                r"\begin{center}" in x 
+                for x in tex_lines
+            ]
     ).flatten()
-    end_obeylines = np.argwhere([r"\end{obeylines}" in x for x in tex_lines]).flatten()
+    end_obeylines = np.argwhere([
+        r"\end{obeylines}" in x or 
+        r"\end{center}" in x 
+        for x in tex_lines
+        ]
+    ).flatten()
 
     # Assert that we have the same number of \begin{obeylines} and \end{obeylines}.
     assert len(begin_obeylines) == len(
@@ -67,6 +76,14 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
     for idx1, idx2 in zip(begin_obeylines, end_obeylines):
         lines:list[str] = list(tex_lines[idx1 + 1 : idx2])
         lines = [x.replace("\\n", "\n").replace("\\newline", "\n").replace("\\\\", "\n") for x in lines]
+        
+        #new \vspace filtering
+        for i in range(len(lines)):
+            # lines[i] = sub(r"\vspace\{[0-9](.?[0-9]?){2}\}", "", lines[i])
+            # lines[i] = sub(r"\vspace{.*?}", "", lines[i])
+            lines[i] = sub(r"(-\ )?\\[a-zA-Z]*\{[a-zA-Z0-9.,\ ]*\}(:\ )?", "", lines[i])
+            if lines[i].count("{") != lines[i].count("}"):
+                lines[i] = lines[i].replace("{","").replace("}","")
 
         lines = [
             x
@@ -75,14 +92,6 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
                 x.startswith("\\") or x == "" or x.startswith("%")
             )
         ]
-        
-        #new \vspace filtering
-        for i, line in enumerate(lines):
-            if "\\vspace" in line:
-                things = lines[i].split("\\vspace")[0]
-                lines[i] = things[0]
-                if(things[1].split("}",1)[1] != ""):
-                    lines[i] += "\n" + things[1].split("}",1)[1]
 
         clean_lines += lines
 
@@ -220,13 +229,13 @@ def pptx_to_png(pptxPath:str, outfolder:str):
         os.mkdir(outfolder)
 
     # Convert the pptx to a pdf using soffice.
-    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export {pptxPath} > /dev/null 2>&1")
-
-    #Move the file to where the pptx is located.
-    os.rename(f'{name}.pdf', f'{pptxPath.replace(".pptx", ".pdf")}')
+    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export '{pptxPath}' > /dev/null 2>&1")
 
     # Grab the name of the infile (but as pdf).
     infile_pdf = pptxPath.replace(".pptx", ".pdf")
+    
+    #Move the file to where the pptx is located.
+    os.rename(f'{name}.pdf', f'{infile_pdf}')
 
     # Convert the pdf to .pngs.
     os.system(
