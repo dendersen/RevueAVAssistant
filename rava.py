@@ -114,9 +114,11 @@ def main():
 
         
         #remove old png's
-        for x in os.listdir(path_png):
-            if x.endswith('.png'):
-                os.remove(os.path.join(path_png, x))
+        if os.path.isdir(path_png):
+            logging.info(f'{song}: 03..03 removing old pngs, make sure that QLab is not using them.')
+            for x in os.listdir(path_png):
+                if x.endswith('.png'):
+                    os.remove(os.path.join(path_png, x))
         
         #Fill the folder with pngs.
         logging.info(f'{song}: 02 -> 03 creating pngs, please wait...')
