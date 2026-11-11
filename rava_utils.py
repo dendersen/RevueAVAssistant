@@ -36,6 +36,8 @@ def remove_consecutive_blanks(l:list[str]) -> list[str]:
 
     return res
 
+lyricStarters = ["obeylines","center","omkv","vers"]
+
 def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
     """
     Preprocess the tex file.
@@ -51,14 +53,14 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
     # Take everything between the \begin{obeylines} and \end{obeylines}.
     begin_obeylines: np.ndarray = np.argwhere(
             [
-                r"\begin{obeylines}" in x or
-                r"\begin{center}" in x 
+                r"\begin{" + controller+ "}" in x
+                for controller in lyricStarters
                 for x in tex_lines
             ]
     ).flatten()
     end_obeylines = np.argwhere([
-        r"\end{obeylines}" in x or 
-        r"\end{center}" in x 
+        r"\end{" + controller+ "}" in x
+        for controller in lyricStarters
         for x in tex_lines
         ]
     ).flatten()
@@ -75,7 +77,7 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
     # Loop over the \begin{obeylines} and \end{obeylines} and take everything in between.
     for idx1, idx2 in zip(begin_obeylines, end_obeylines):
         lines:list[str] = list(tex_lines[idx1 + 1 : idx2])
-        lines = [x.replace("\\n", "\n").replace("\\newline", "\n").replace("\\\\", "\n") for x in lines]
+        lines = [x.replace("\\n", "\n").replace("\\newline", "\n").replace("\\\\", "\n").replace("\n\n","\n") for x in lines]
         
         #new \vspace filtering
         for i in range(len(lines)):
@@ -229,7 +231,7 @@ def pptx_to_png(pptxPath:str, outfolder:str):
         os.mkdir(outfolder)
 
     # Convert the pptx to a pdf using soffice.
-    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export '{pptxPath}' > /dev/null 2>&1")
+    os.system(f"soffice --headless --convert-to pdf:writer_pdf_Export '{pptxPath}'")
 
     # Grab the name of the infile (but as pdf).
     infile_pdf = pptxPath.replace(".pptx", ".pdf")
@@ -239,7 +241,7 @@ def pptx_to_png(pptxPath:str, outfolder:str):
 
     # Convert the pdf to .pngs.
     os.system(
-        f"convert -density 300 {infile_pdf} {outfolder}/{name}_%03d.png > /dev/null 2>&1"
+        f"convert -density 300 {infile_pdf} {outfolder}/{name}_%03d.png"
     )
 
     # Delete the pdf in the /pptx/ folder afterwards.
