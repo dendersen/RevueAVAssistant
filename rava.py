@@ -6,7 +6,62 @@ import os
 import rava_utils
 import shutil
 
+from typing import Callable
+
+operations:dict[str, list[tuple[Callable[[str, str], bool|None],str]]] = {
+    "LATEX->PPTX->PNG": [
+        (rava_utils.preprocess_tex,"01_txt"),
+        (rava_utils.create_pptx,"02_pptx"),
+        (rava_utils.pptx_to_png,"03_png")
+    ],
+    "LATEX->HTML-RUNDOWN": [
+        (rava_utils.preprocess_tex,"01_txt"),
+        (rava_utils.txt_to_html,"02_html"),
+        (rava_utils.generateRundowns,"03_rundown")
+    ]
+}
+
+def newMain(project:str):
+    print(f"Running new version for project: {project}")
+    print("please pick an operation to run.")
+    for i, op in enumerate(operations.keys()):
+        print(f"[{i}] - {op}")
+    choice = input("Enter the number of the operation you want to run: ")
+    if choice.isdigit() and int(choice) in range(len(operations)):
+        operation = list(operations.keys())[int(choice)]
+        run_operation(operation, project)
+    elif choice in operations:
+        run_operation(choice, project)
+    else:
+        print("Invalid choice.")
+
+def run_operation(operation:str, project:str):
+    if operation not in operations:
+        logging.error(f"Operation {operation} not supported.")
+        return
+    
+    srcDir = os.path.join(".", project, "lyrics")
+    inputDir = os.path.join(srcDir, "00_raw")
+    
+    for func, Outdir in operations[operation]: #get operation list
+        inputs = os.listdir(inputDir)
+        outputDir = os.path.join(srcDir, Outdir)
+        
+        for input_file in inputs: #perform operation for each file/directory in input dir
+            input_path = os.path.join(inputDir, input_file)
+            os.makedirs(outputDir, exist_ok=True)
+            retval = func(input_path, outputDir)# execute function
+            
+            # if function returns a status value, check if it indicates failure
+            if isinstance(retval, bool) and not retval:
+                logging.error(f"Operation {func.__name__} failed for {input_path}.")
+        
+        inputDir = outputDir
+    
+
 def main():
+    
+    
     # Set up the logging.
     logging.basicConfig(
         level=logging.INFO,
@@ -35,6 +90,12 @@ def main():
             args.project = fileList[int(target)]
         elif target in fileList:
             args.project = target
+    
+    
+    print("do you wish to try the new version? (yes/no)")
+    if input().strip().lower().startswith("y"):
+        return newMain(args.project)
+    
 
     #Find the tex files in the folder.
     raw_paths:list[str] = sorted(rava_utils.find_raw_lyrics(args.project))
@@ -71,7 +132,7 @@ def main():
             #If the file is already a .txt file, just copy it.
             shutil.copy(path_raw, path_txt)
         else:
-            valid = rava_utils.preprocess_tex(path_in = path_raw, path_out = path_txt, name = song)
+            valid = rava_utils.preprocess_tex(path_in = path_raw, path_out = path_txt)
             if not valid:
                 logging.info(f'{song}: skipped, no \\begin{{obeylines}} and \\end{{obeylines}} found or othwise invlaid')
                 continue

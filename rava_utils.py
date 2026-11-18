@@ -25,20 +25,19 @@ def remove_consecutive_blanks(l:list[str]) -> list[str]:
     #Remove consecutive '' elements in a list.
     res:list[str] = []
 
-    for key, group in itertools.groupby(l, lambda x : x=='\n'):
-        # check key=='' or not
-        # if key!='' extend all values to res
-        if not key:
-            res.extend(list(group))
-        # if key=='' append one '' to res
-        else:
+    for line in l:
+        if line != '\n':
+            res.append(line)
+        elif res and res[-1] != '\n':
             res.append('\n')
+        else:
+            continue
 
     return res
 
 lyricStarters = ["obeylines","center","omkv","vers"]
 
-def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
+def preprocess_tex(path_in: str, path_out: str) -> bool:
     """
     Preprocess the tex file.
     returns True when the file was valid
@@ -51,19 +50,18 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
         tex_lines: np.ndarray = np.array(f.readlines())
 
     # Take everything between the \begin{obeylines} and \end{obeylines}.
-    begin_obeylines: np.ndarray = np.argwhere(
-            [
-                r"\begin{" + controller+ "}" in x
-                for controller in lyricStarters
-                for x in tex_lines
-            ]
-    ).flatten()
-    end_obeylines = np.argwhere([
-        r"\end{" + controller+ "}" in x
-        for controller in lyricStarters
-        for x in tex_lines
-        ]
-    ).flatten()
+    begin_obeylines = []
+    end_obeylines = []
+    for idx, line in enumerate(tex_lines):
+        for controller in lyricStarters:
+            control_in = r"\begin{" + controller + "}"
+            control_out = r"\end{" + controller + "}"
+            if control_in in line:
+                begin_obeylines.append(idx)
+            elif control_out in line:
+                end_obeylines.append(idx)
+    begin_obeylines = np.array(begin_obeylines)
+    end_obeylines = np.array(end_obeylines)
 
     # Assert that we have the same number of \begin{obeylines} and \end{obeylines}.
     assert len(begin_obeylines) == len(
@@ -103,6 +101,9 @@ def preprocess_tex(path_in: str, path_out: str, name: str) -> bool:
         logging.info(f"No lines found in {path_in}. Skipping.")
         return False
 
+    if os.path.isdir(path_out):
+        path_out = os.path.join(path_out, os.path.basename(path_in))
+        path_out = os.path.splitext(path_out)[0] + ".txt"
     # Write the preprocessed lines to the outpath.
     with open(path_out, "w") as f:
         f.writelines(clean_lines)
@@ -195,7 +196,7 @@ class PPTXSong:
         """
         self.prs.save(outpath)
 
-def create_pptx(list_of_lyrics:list[str], out_path:str):
+def create_pptx(list_of_lyrics:list[str] | str, out_path:str):
 
     # Load the config file.
     
@@ -205,6 +206,14 @@ def create_pptx(list_of_lyrics:list[str], out_path:str):
     font_bold: bool
     font_size: Pt
 
+    if isinstance(list_of_lyrics, str):
+        if os.path.isfile(list_of_lyrics):
+            with open(list_of_lyrics, 'r', encoding='utf-8') as f:
+                list_of_lyrics = f.read().splitlines()
+        elif os.path.isdir(list_of_lyrics):
+            for filename in os.listdir(list_of_lyrics):
+                create_pptx(os.path.join(list_of_lyrics, filename), os.path.join(out_path, filename.replace(".txt", ".pptx")))
+
     background_color, font_color, font_name, font_bold, font_size = load_config(
         os.path.join(".", "revue_template", "config.yaml")
     )
@@ -213,6 +222,10 @@ def create_pptx(list_of_lyrics:list[str], out_path:str):
     for line in list_of_lyrics:
         pptx.add_slide(line)
 
+    if os.path.isdir(out_path):
+        name = os.path.basename(out_path)
+        name = os.path.splitext(name)[0] + ".pptx"
+        out_path = os.path.join(out_path, name)
     pptx.save(out_path)
     return
 
@@ -248,3 +261,71 @@ def pptx_to_png(pptxPath:str, outfolder:str):
     os.remove(infile_pdf)
 
     return
+
+
+TEMPLATES = os.path.join(os.path.dirname(os.path.abspath(__file__)),"templates")
+HTML_TEMPLATE    = open(os.path.join(TEMPLATES, "HTML_TEMPLATE.html")).read()
+RUNDOWN_TEMPLATE = open(os.path.join(TEMPLATES, "RUNDOWN_TEMPLATE.xml")).read()
+HTML_GROUP_TEMPLATE = open(os.path.join(TEMPLATES, "HTML_GROUP_TEMPLATE.xml")).read()
+
+def txt_to_html(rawPath:str, outPath:str):
+    """
+        convert all files in a directory (or a single file)
+        to a corresponding HTML file(s) using the HTML template.
+        will seek recursively through directories. for .txt files, it will generate corresponding HTML files.
+    """
+    if os.path.isdir(rawPath):
+        for filename in os.listdir(rawPath):
+            txt_to_html(os.path.join(rawPath, filename), os.path.join(outPath, filename))
+    elif rawPath.endswith(".txt"):
+        os.makedirs(outPath, exist_ok=True)
+        with open(rawPath, "r") as f:
+            for i, line in enumerate(f.readlines()):
+                while line.endswith("\n"):
+                    line = line[:-1]
+                html_content = HTML_TEMPLATE.replace("$YOUR_TEXT$", line.replace("\n", "<br>"))
+                out_dir = os.path.join(outPath, os.path.basename(rawPath).replace(".txt", ""))
+                os.makedirs(out_dir, exist_ok=True)
+                out_file = os.path.join(out_dir, f"{i}.html")
+                with open(out_file, "w") as f_out:
+                    f_out.write(html_content)
+        print(f"Generated HTML for {rawPath}")
+    else:
+        print(f"Skipping non-text file: {rawPath}")
+
+def generateRundowns(htmlPath:str, outPath:str):
+    """
+        generate rundown XML files from HTML files using the rundown template.
+        will seek recursively through directories. for .html files.
+        it will generate a corresponding XML file for each directory with html files.
+    """
+    if not os.path.isdir(htmlPath):
+        print(f"HTML path not directory: {htmlPath}")
+        return
+    
+    contents = os.listdir(htmlPath)
+    htmlFiles:list[str] = []
+    for filename in contents:
+        if os.path.isdir(os.path.join(htmlPath, filename)):
+            generateRundowns(os.path.join(htmlPath, filename), os.path.join(outPath, filename))
+        elif filename.endswith(".html"):
+            htmlFiles.append(os.path.join(htmlPath, filename))
+    
+    if not htmlFiles:
+        print(f"No HTML files found in {htmlPath}")
+        return
+
+    print(f"found {len(htmlFiles)} HTML files in {htmlPath}")
+    os.makedirs(outPath, exist_ok=True)
+    xml_group_content = HTML_GROUP_TEMPLATE
+    xml_groups:list[str] = []
+    for html_file in htmlFiles:
+        xml_group = xml_group_content.replace("$YOUR_HTML$", html_file)
+        xml_groups.append(xml_group)
+
+    xml_content = RUNDOWN_TEMPLATE.replace("$YOUR_HTML_GROUP$", "\n".join(xml_groups))
+    out_file = os.path.join(outPath, "rundown.xml")
+    with open(out_file, "w") as f_out:
+        f_out.write(xml_content)
+    
+    print(f"Generated rundown XML at {out_file}")
