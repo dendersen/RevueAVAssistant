@@ -1,4 +1,3 @@
-import itertools
 import logging
 import os
 import shutil
@@ -8,6 +7,7 @@ import yaml
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Emu, Pt, Inches
+import re
 from re import sub
 
 def find_raw_lyrics(project_path:str) -> list[str]:
@@ -34,6 +34,59 @@ def remove_consecutive_blanks(l:list[str]) -> list[str]:
             continue
 
     return res
+
+def load_config_colors(path: str) -> dict[str, str]:
+    with open(path) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return config.get("texColors", {})
+
+class Formatter:
+    MULTI_LINE_REGEX = r"\{[^}{]+\}"
+    MULTI_LINE_PART_REGEX = r"\{[^}{\n]+\}"
+    SINGLE_LINE_REGEX = r"{[^}{\n]+}"
+    def __init__(self, latexCall:str, htmlPart:str):
+        self.latexCall = latexCall
+        self.htmlPart = htmlPart
+        self.regexFindS = latexCall + self.SINGLE_LINE_REGEX + self.SINGLE_LINE_REGEX
+        self.regexFindM = latexCall + self.SINGLE_LINE_REGEX + self.MULTI_LINE_REGEX
+    
+    def parse(self, text: str) -> str:
+        text = re.sub(self.regexFindS, self.htmlPart, text)
+        for m in re.findall(self.regexFindM, text):
+            target = re.match(self.latexCall + self.MULTI_LINE_PART_REGEX, m)
+            if target is None:
+                text = text.replace(m, "")
+                continue
+            htmlTmp = self.htmlPart.replace("$0", target.group(0))
+            for line in m.split("\n"):
+                line = line.strip()
+                if not line:
+                    continue
+                lineNew = htmlTmp.replace("$1", line)
+                text = text.replace(line, lineNew)
+        return text
+
+latexFormat:list[Formatter] = [
+    Formatter("\\textcolor", "<p style=\"color: $0;\">$1</p>"),
+]
+
+def tex_format_to_html_format(path_in: str, path_out: str) -> bool:
+    if os.path.isdir(path_in):
+        out = True
+        for file in os.listdir(path_in):
+            path_file_in = os.path.join(path_in, file)
+            path_file_out = os.path.join(path_out, file)
+            out &= tex_format_to_html_format(path_file_in, path_file_out)
+        return out
+    path_out = os.path.join(path_out, os.path.basename(path_in))
+    if not os.path.isfile(path_in):
+        return False
+    text = open(path_in, "r").read()
+    for formatter in latexFormat:
+        text = formatter.parse(text)
+    with open(path_out, "w") as f:
+        f.write(text)
+    return True
 
 lyricStarters = ["obeylines","center","omkv","vers"]
 

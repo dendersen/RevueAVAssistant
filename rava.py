@@ -18,6 +18,13 @@ operations:dict[str, list[tuple[Callable[[str, str], bool|None],str]]] = {
         (rava_utils.preprocess_tex,"01_txt"),
         (rava_utils.txt_to_html,"02_html"),
         (rava_utils.generateRundowns,"03_rundown")
+    ],
+    "LATEX->HTML-RUNDOWN (formatted)": [
+        (rava_utils.preprocess_tex_format,"00_1_txt"),
+        (rava_utils.tex_format_to_html_format,"00_2_txt"),
+        (rava_utils.preprocess_tex,"01_htmlReady"),
+        (rava_utils.txt_to_html,"02_html"),
+        (rava_utils.generateRundowns,"03_rundown")
     ]
 }
 
