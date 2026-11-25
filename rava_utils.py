@@ -37,7 +37,10 @@ def remove_consecutive_blanks(l:list[str]) -> list[str]:
 
 lyricStarters = ["obeylines","center","omkv","vers"]
 
-def preprocess_tex(path_in: str, path_out: str) -> bool:
+def preprocess_tex_format(path_in: str, path_out: str) -> bool:
+    return preprocess_tex(path_in, path_out, keepTags=True)
+
+def preprocess_tex(path_in: str, path_out: str, keepTags:bool = False) -> bool:
     """
     Preprocess the tex file.
     returns True when the file was valid
@@ -50,8 +53,8 @@ def preprocess_tex(path_in: str, path_out: str) -> bool:
         tex_lines: np.ndarray = np.array(f.readlines())
 
     # Take everything between the \begin{obeylines} and \end{obeylines}.
-    begin_obeylines = []
-    end_obeylines = []
+    begin_obeylines:list[int] = []
+    end_obeylines:list[int] = []
     for idx, line in enumerate(tex_lines):
         for controller in lyricStarters:
             control_in = r"\begin{" + controller + "}"
@@ -60,36 +63,37 @@ def preprocess_tex(path_in: str, path_out: str) -> bool:
                 begin_obeylines.append(idx)
             elif control_out in line:
                 end_obeylines.append(idx)
-    begin_obeylines = np.array(begin_obeylines)
-    end_obeylines = np.array(end_obeylines)
+    np_begin_obeylines = np.array(begin_obeylines)
+    np_end_obeylines = np.array(end_obeylines)
 
     # Assert that we have the same number of \begin{obeylines} and \end{obeylines}.
-    assert len(begin_obeylines) == len(
-        end_obeylines
+    assert len(np_begin_obeylines) == len(
+        np_end_obeylines
     ), f"Number of \\begin{{obeylines}} and \\end{{obeylines}} do not match in {path_in}."
-    if len(begin_obeylines) == 0:
+    if len(np_begin_obeylines) == 0:
         return False
 
     clean_lines:list[str] = []
 
     # Loop over the \begin{obeylines} and \end{obeylines} and take everything in between.
-    for idx1, idx2 in zip(begin_obeylines, end_obeylines):
+    for idx1, idx2 in zip(np_begin_obeylines, np_end_obeylines):
         lines:list[str] = list(tex_lines[idx1 + 1 : idx2])
         lines = [x.replace("\\n", "\n").replace("\\newline", "\n").replace("\\\\", "\n").replace("\n\n","\n") for x in lines]
         
         #new \vspace filtering
-        for i in range(len(lines)):
-            # lines[i] = sub(r"\vspace\{[0-9](.?[0-9]?){2}\}", "", lines[i])
-            # lines[i] = sub(r"\vspace{.*?}", "", lines[i])
-            lines[i] = sub(r"(-\ )?\\[a-zA-Z]*\{[a-zA-Z0-9.,\ ]*\}(:\ )?", "", lines[i])
-            if lines[i].count("{") != lines[i].count("}"):
-                lines[i] = lines[i].replace("{","").replace("}","")
+        if not keepTags:
+            for i in range(len(lines)):
+                # lines[i] = sub(r"\vspace\{[0-9](.?[0-9]?){2}\}", "", lines[i])
+                # lines[i] = sub(r"\vspace{.*?}", "", lines[i])
+                lines[i] = sub(r"(-\ )?\\[a-zA-Z]*\{[a-zA-Z0-9.,\ ]*\}(:\ )?", "", lines[i])
+                if lines[i].count("{") != lines[i].count("}"):
+                    lines[i] = lines[i].replace("{","").replace("}","")
 
         lines = [
             x
             for x in lines
             if not (
-                x.startswith("\\") or x == "" or x.startswith("%")
+                (x.startswith("\\") and not keepTags) or x == "" or x.startswith("%")
             )
         ]
 
@@ -196,7 +200,7 @@ class PPTXSong:
         """
         self.prs.save(outpath)
 
-def create_pptx(list_of_lyrics:list[str] | str, out_path:str):
+def create_pptx(list_of_lyrics:list[str] | str, out_path:str, name:str = ""):
 
     # Load the config file.
     
@@ -208,6 +212,8 @@ def create_pptx(list_of_lyrics:list[str] | str, out_path:str):
 
     if isinstance(list_of_lyrics, str):
         if os.path.isfile(list_of_lyrics):
+            name = os.path.basename(list_of_lyrics)
+            name = os.path.splitext(name)[0]
             with open(list_of_lyrics, 'r', encoding='utf-8') as f:
                 list_of_lyrics = f.read().splitlines()
         elif os.path.isdir(list_of_lyrics):
@@ -223,9 +229,7 @@ def create_pptx(list_of_lyrics:list[str] | str, out_path:str):
         pptx.add_slide(line)
 
     if os.path.isdir(out_path):
-        name = os.path.basename(out_path)
-        name = os.path.splitext(name)[0] + ".pptx"
-        out_path = os.path.join(out_path, name)
+        out_path = os.path.join(out_path, name + ".pptx")
     pptx.save(out_path)
     return
 
@@ -324,7 +328,9 @@ def generateRundowns(htmlPath:str, outPath:str):
         xml_groups.append(xml_group)
 
     xml_content = RUNDOWN_TEMPLATE.replace("$YOUR_HTML_GROUP$", "\n".join(xml_groups))
-    out_file = os.path.join(outPath, "rundown.xml")
+    name = os.path.basename(htmlPath)
+    name = os.path.splitext(name)[0]
+    out_file = os.path.join(outPath, f"{name}.xml")
     with open(out_file, "w") as f_out:
         f_out.write(xml_content)
     
