@@ -324,7 +324,7 @@ def generateRundowns(htmlPath:str, outPath:str):
     xml_group_content = HTML_GROUP_TEMPLATE
     xml_groups:list[str] = []
     for html_file in htmlFiles:
-        xml_group = xml_group_content.replace("$YOUR_HTML$", html_file)
+        xml_group = xml_group_content.replace("$HTML_PATH$", html_file)
         xml_groups.append(xml_group)
 
     xml_content = RUNDOWN_TEMPLATE.replace("$YOUR_HTML_GROUP$", "\n".join(xml_groups))
